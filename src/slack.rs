@@ -72,10 +72,9 @@ fn create_message(target: &MonitoringTarget, is_start: bool) -> Result<String, S
 
 pub fn send_slack(target: &MonitoringTarget, is_start: bool) -> Result<(), String> {
     let payload = create_message(target, is_start)?;
-    reqwest::blocking::Client::new()
-        .post(&target.webhook_url)
-        .body(payload)
-        .send()
+    ureq::post(&target.webhook_url)
+        .set("Content-Type", "application/json")
+        .send_string(&payload)
         .map(|_| ())
-        .map_err(|e| format!("failed to send webhook: {e}"))
+        .map_err(|e| format!("failed to call slack incoming webhook: {e}"))
 }
