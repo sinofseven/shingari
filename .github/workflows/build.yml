@@ -49,7 +49,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: binary-${{ matrix.job.target }}
-          path: target/${{ matrix.job.target }}/release/kabeuchi
+          path: target/${{ matrix.job.target }}/release/shingari
 
   package:
     name: package
@@ -79,10 +79,10 @@ jobs:
           cp LICENSE dist/
           cp README.md dist/
           cd dist
-          zip -r ../kabeuchi-${{ matrix.job.target }}.zip .
+          zip -r ../shingari-${{ matrix.job.target }}.zip .
       - uses: actions/upload-artifact@v3
         with:
-          path: kabeuchi-${{ matrix.job.target }}.zip
+          path: shingari-${{ matrix.job.target }}.zip
 
   draft-release:
     name: draft-release
