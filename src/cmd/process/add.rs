@@ -20,7 +20,10 @@ impl Cmd for SubCommandAdd {
 
     fn run(args: &ArgMatches) -> Result<(), String> {
         let slack_webhook_name: &String = args.get_one(ID_SLACK_WEBHOOK_NAME).unwrap();
-        let pid: &i32 = args.get_one(ID_PID).unwrap();
+        let pid: &String = args.get_one(ID_PID).unwrap();
+        let pid: i32 = pid
+            .parse()
+            .map_err(|e| format!("failed to convert pid to int: pid={pid}, err={e}"))?;
         let memo: Option<String> = args.get_one(ID_MEMO).map(|f: &String| f.to_string());
 
         let config = crate::models::SlackWebhookConfig::load()?;
@@ -28,7 +31,7 @@ impl Cmd for SubCommandAdd {
             "not found slack webhook (name: {slack_webhook_name})"
         ))?;
 
-        let data = crate::models::MonitoringTarget::new(pid, &slack_webhook.url, &memo)?;
+        let data = crate::models::MonitoringTarget::new(&pid, &slack_webhook.url, &memo)?;
         data.save_target()?;
 
         crate::slack::send_slack(&data, true)?;
