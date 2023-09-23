@@ -15,8 +15,11 @@ impl Cmd for SubCommandGet {
     }
 
     fn run(args: &ArgMatches) -> Result<(), String> {
-        let pid: &i32 = args.get_one(ID_PID).unwrap();
-        let data = crate::models::MonitoringTarget::load(pid)?;
+        let pid: &String = args.get_one(ID_PID).unwrap();
+        let pid: i32 = pid
+            .parse()
+            .map_err(|e| format!("failed to convert pid to int: pid={pid}, err={e}"))?;
+        let data = crate::models::MonitoringTarget::load(&pid)?;
         let text = serde_json::to_string_pretty(&data)
             .map_err(|e| format!("failed to serialize monitoring target data: {e}"))?;
         println!("{text}");

@@ -10,9 +10,9 @@ fn create_message(target: &MonitoringTarget, is_start: bool) -> Result<String, S
     let mut lines: Vec<String> = vec![
         "<!channel>".to_string(),
         (if is_start {
-            "start monitoring to wait finish process"
+            "*start* monitoring to wait finish process"
         } else {
-            "finish monitoring to wait finish process"
+            "*finish* monitoring to wait finish process"
         })
         .to_string(),
         format!("- pid: `{}`", &target.pid),
