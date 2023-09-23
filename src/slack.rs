@@ -37,22 +37,22 @@ fn create_message(target: &MonitoringTarget, is_start: bool) -> Result<String, S
         },
         Field {
             short: false,
-            value: format!("- pid: {}", &target.pid),
+            value: format!("- pid: `{}`", &target.pid),
         },
         Field {
             short: false,
-            value: format!("- cwd: {}", &target.cwd),
+            value: format!("- cwd: `{}`", &target.cwd),
         },
         Field {
             short: false,
-            value: format!("- cmdline: {}", &target.cmdline),
+            value: format!("- cmdline: `{}`", &target.cmdline),
         },
     ];
 
     if let Some(memo) = &target.memo {
         fields.push(Field {
             short: false,
-            value: format!("- memo: {memo}"),
+            value: format!("- memo: `{memo}`"),
         })
     }
 
