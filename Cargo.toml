@@ -13,3 +13,5 @@ serde_json = "1.0.107"
 glob = "0.3.1"
 procfs = "0.15.1"
 ureq = "2.7.1"
+log = "0.4.20"
+log4rs = {version = "1.2.0", features = ["rolling_file_appender", "pattern_encoder"]}

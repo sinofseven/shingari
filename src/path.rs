@@ -7,6 +7,16 @@ pub fn get_path_directory_config() -> Result<PathBuf, String> {
         .ok_or_else(|| "failed to resolve Home directory".to_string())
 }
 
+pub fn get_str_file_error_log() -> Result<String, String> {
+    get_path_directory_config()
+        .map(|p| p.join("error.log"))
+        .map(|p| format!("{}", p.display()))
+}
+
+pub fn get_str_file_pattern_error_log() -> Result<String, String> {
+    get_path_directory_config().map(|p| format!("{}/error.{{}}.log", p.display()))
+}
+
 pub fn get_path_file_slack_webhook() -> Result<PathBuf, String> {
     get_path_directory_config().map(|p| p.join("slack_webhook.json"))
 }
