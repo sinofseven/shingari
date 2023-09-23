@@ -1,0 +1,105 @@
+name: build
+
+on:
+  push:
+    branches-ignore:
+      - "increment-*"
+    tags:
+      - 'v[0-9]+\.[0-9]+\.[0-9]+'
+
+env:
+  RELEASE_FLAG: ""
+  CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
+
+# Referring to https://github.com/sharkdp/bat/blob/master/.github/workflows/CICD.yml
+
+jobs:
+  build-on-ubuntu:
+    name: build (ubuntu-22.04, ${{ matrix.job.target }})
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        job:
+          - target: aarch64-unknown-linux-gnu
+          - target: arm-unknown-linux-gnueabihf
+          - target: arm-unknown-linux-musleabihf
+          - target: i686-unknown-linux-gnu
+          - target: i686-unknown-linux-musl
+          - target: x86_64-unknown-linux-gnu
+          - target: x86_64-unknown-linux-musl
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install prerequistites
+        shell: bash
+        run: |
+          case ${{ matrix.job.target }} in
+            arm-unknown-linux-*) sudo apt-get -y update ; sudo apt-get -y install gcc-arm-linux-gnueabihf ;;
+            aarch64-unknown-linux-gnu) sudo apt-get -y update ; sudo apt-get -y install gcc-aarch64-linux-gnu ;;
+          esac
+      - run: sudo snap install zig --classic --beta
+      - uses: dtolnay/rust-toolchain@stable
+      - run: rustup target add ${{ matrix.job.target }}
+      - name: fix flag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: echo "RELEASE_FLAG=--release" >> $GITHUB_ENV
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: cargo-${{ runner.os }}-${{ matrix.job.target }}-${{ hashFiles('**/Cargo.lock') }}-${{ env.RELEASE_FLAG }}
+      - run: cargo install cargo-zigbuild
+      - run: cargo zigbuild --locked $RELEASE_FLAG --target=${{ matrix.job.target }}
+      - uses: actions/upload-artifact@v3
+        with:
+          name: binary-${{ matrix.job.target }}
+          path: target/${{ matrix.job.target }}/release/kabeuchi
+
+  package:
+    name: package
+    runs-on: ubuntu-22.04
+    if: startsWith(github.ref, 'refs/tags/')
+    needs:
+      - build-on-ubuntu
+    strategy:
+      fail-fast: true
+      matrix:
+        job:
+          - target: aarch64-unknown-linux-gnu
+          - target: arm-unknown-linux-gnueabihf
+          - target: arm-unknown-linux-musleabihf
+          - target: i686-unknown-linux-gnu
+          - target: i686-unknown-linux-musl
+          - target: x86_64-unknown-linux-gnu
+          - target: x86_64-unknown-linux-musl
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+        with:
+          name: binary-${{ matrix.job.target }}
+          path: binary-${{ matrix.job.target }}
+      - run: |
+          mkdir dist
+          cp binary-${{ matrix.job.target }}/* dist/
+          cp CREDITS.yaml dist/
+          cp LICENSE dist/
+          cp README.md dist/
+          cd dist
+          zip -r ../kabeuchi-${{ matrix.job.target }}.zip .
+      - uses: actions/upload-artifact@v3
+        with:
+          path: kabeuchi-${{ matrix.job.target }}.zip
+
+  draft-release:
+    name: draft-release
+    runs-on: ubuntu-22.04
+    needs: package
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: artifact
+      - run: find . -type f | sort
+      - uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+          files: "*.zip"
