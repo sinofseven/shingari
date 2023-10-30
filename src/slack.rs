@@ -25,6 +25,7 @@ struct PayloadV2 {
 }
 
 fn create_message(target: &MonitoringTarget, is_start: bool) -> Result<String, String> {
+    let hostname = gethostname::gethostname().to_str().map(|h| h.to_string()).ok_or("failed to convert OsString to String".to_string())?;
     let mut fields: Vec<Field> = vec![
         Field {
             short: false,
@@ -34,6 +35,10 @@ fn create_message(target: &MonitoringTarget, is_start: bool) -> Result<String, S
                 "finish monitoring to wait finish process"
             })
             .to_string(),
+        },
+        Field {
+            short: false,
+            value: format!("- hostname: `{}`", &hostname)
         },
         Field {
             short: false,
